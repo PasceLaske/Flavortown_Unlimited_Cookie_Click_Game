@@ -7,6 +7,8 @@ let clickValue = 1;
 let achievements = [];
 let lastMilestoneBots = 0;
 let lastMilestoneSuffix = 0;
+let lastSaveTime = 0;
+const SAVE_INTERVAL = 5000; // Speichern alle 5 Sekunden
 
 const cookieDisplay = document.getElementById('cookie-counter');
 const cpsDisplay = document.getElementById('cps-counter');
@@ -18,7 +20,84 @@ const achievementsDiv = document.getElementById('achievements');
 const goldenCookie = document.getElementById('golden-cookie');
 
 // ────────────────────────────────────────────────
-// ZAHLEN-ABKÜRZUNG
+// INITIAL UPGRADES (Fallback beim ersten Start)
+// ────────────────────────────────────────────────
+const initialUpgrades = [
+    { name: "Flavortown Cursor", baseCost: 15, cps: 0.1, owned: 0 },
+    { name: "Finger Lickin' Hacker", baseCost: 100, cps: 1, owned: 0 },
+    { name: "Dino's BBQ Bot", baseCost: 1100, cps: 8, owned: 0 },
+    { name: "Flavor Farm Frenzy", baseCost: 12000, cps: 47, owned: 0 },
+    { name: "Spice Rack Miner", baseCost: 130000, cps: 260, owned: 0 },
+    { name: "Triple D Factory", baseCost: 1400000, cps: 1400, owned: 0 },
+    { name: "Guy's AI Grill Swarm", baseCost: 20000000, cps: 7800, owned: 0 },
+    { name: "Quantum Flavor Blaster", baseCost: 330000000, cps: 44000, owned: 0 },
+    { name: "Space Station Sizzle", baseCost: 5100000000, cps: 260000, owned: 0 },
+    { name: "Time Warp Tasty Portal", baseCost: 75000000000, cps: 1400000, owned: 0 }
+];
+
+let upgradesData = initialUpgrades.slice(); // Kopie
+
+const aiBotNames = [
+    "Flavor Fusion Bot", "Spicy Hackatron", "Burger Byte Blaster", "Pizza Pixel Pulverizer",
+    "Taco Time Traveler", "Donut Dimension Devourer", "Fries Frequency Fryer", "Shakebot Supreme",
+    "Wing Wizard", "Nachos Nebula Nommer", "Ramen Reactor", "Sushi Swarm Hacker",
+    "Kebab Quantum Kicker", "Pancake Portal Punisher", "Waffle Warp Worker", "Churro Chrono Crusher",
+    "Falafel Flux Factory", "Boba Black Hole", "Schnitzel Singularity", "Curry Cosmic Cruncher"
+];
+let aiBotIndex = 0;
+
+// ────────────────────────────────────────────────
+// SPEICHER-FUNKTIONEN
+// ────────────────────────────────────────────────
+function saveGame() {
+    const saveData = {
+        cookies: cookies,
+        upgradesData: upgradesData,
+        aiBotIndex: aiBotIndex,
+        achievements: achievements,
+        lastMilestoneBots: lastMilestoneBots,
+        lastMilestoneSuffix: lastMilestoneSuffix,
+        timestamp: Date.now()
+    };
+    localStorage.setItem('flavortownSave', JSON.stringify(saveData));
+}
+
+function loadGame() {
+    try {
+        const save = localStorage.getItem('flavortownSave');
+        if (save) {
+            const data = JSON.parse(save);
+            cookies = data.cookies || 0;
+            upgradesData = data.upgradesData || initialUpgrades.slice();
+            aiBotIndex = data.aiBotIndex || 0;
+            achievements = data.achievements || [];
+            lastMilestoneBots = data.lastMilestoneBots || 0;
+            lastMilestoneSuffix = data.lastMilestoneSuffix || 0;
+
+            // CPS neu berechnen (für Konsistenz)
+            cookiesPerSecond = 0;
+            upgradesData.forEach(u => {
+                cookiesPerSecond += u.owned * u.cps;
+            });
+
+            console.log('Spiel geladen! 🍪');
+            return true;
+        }
+    } catch (e) {
+        console.error('Fehler beim Laden:', e);
+    }
+    return false;
+}
+
+function resetGame() {
+    if (confirm('Wirklich neustarten? Alle Fortschritte gehen verloren!')) {
+        localStorage.removeItem('flavortownSave');
+        location.reload();
+    }
+}
+
+// ────────────────────────────────────────────────
+// ZAHLEN-ABKÜRZUNG (unverändert)
 // ────────────────────────────────────────────────
 function suffixForTier(tier) {
     let s = '';
@@ -55,92 +134,7 @@ function formatCps(num) {
 }
 
 // ────────────────────────────────────────────────
-// UPGRADES + AI-BOTS
-// ────────────────────────────────────────────────
-const initialUpgrades = [
-    { name: "Flavortown Cursor", baseCost: 15, cps: 0.1, owned: 0 },
-    { name: "Finger Lickin' Hacker", baseCost: 100, cps: 1, owned: 0 },
-    { name: "Dino's BBQ Bot", baseCost: 1100, cps: 8, owned: 0 },
-    { name: "Flavor Farm Frenzy", baseCost: 12000, cps: 47, owned: 0 },
-    { name: "Spice Rack Miner", baseCost: 130000, cps: 260, owned: 0 },
-    { name: "Triple D Factory", baseCost: 1400000, cps: 1400, owned: 0 },
-    { name: "Guy's AI Grill Swarm", baseCost: 20000000, cps: 7800, owned: 0 },
-    { name: "Quantum Flavor Blaster", baseCost: 330000000, cps: 44000, owned: 0 },
-    { name: "Space Station Sizzle", baseCost: 5100000000, cps: 260000, owned: 0 },
-    { name: "Time Warp Tasty Portal", baseCost: 75000000000, cps: 1400000, owned: 0 }
-];
-
-let upgradesData = [...initialUpgrades];
-let aiBotIndex = 0;
-
-const aiBotNames = [
-    "Flavor Fusion Bot", "Spicy Hackatron", "Burger Byte Blaster", "Pizza Pixel Pulverizer",
-    "Taco Time Traveler", "Donut Dimension Devourer", "Fries Frequency Fryer", "Shakebot Supreme",
-    "Wing Wizard", "Nachos Nebula Nommer", "Ramen Reactor", "Sushi Swarm Hacker",
-    "Kebab Quantum Kicker", "Pancake Portal Punisher", "Waffle Warp Worker", "Churro Chrono Crusher",
-    "Falafel Flux Factory", "Boba Black Hole", "Schnitzel Singularity", "Curry Cosmic Cruncher"
-];
-
-// ────────────────────────────────────────────────
-// SPEICHER-FUNKTIONEN
-// ────────────────────────────────────────────────
-const SAVE_KEY = 'flavortownClickerSave_v1';
-
-function saveGame() {
-    const saveData = {
-        cookies,
-        upgradesData,
-        aiBotIndex,
-        achievements,
-        lastMilestoneBots,
-        lastMilestoneSuffix,
-        timestamp: Date.now()
-    };
-    localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
-}
-
-function loadGame() {
-    const saved = localStorage.getItem(SAVE_KEY);
-    if (!saved) return false;
-
-    try {
-        const data = JSON.parse(saved);
-
-        cookies = Number(data.cookies) || 0;
-        aiBotIndex = Number(data.aiBotIndex) || 0;
-        achievements = Array.isArray(data.achievements) ? data.achievements : [];
-        lastMilestoneBots = Number(data.lastMilestoneBots) || 0;
-        lastMilestoneSuffix = Number(data.lastMilestoneSuffix) || 0;
-
-        if (Array.isArray(data.upgradesData)) {
-            upgradesData = data.upgradesData.map(u => ({
-                ...u,
-                owned: Number(u.owned) || 0,
-                cps: Number(u.cps) || 0,
-                baseCost: Number(u.baseCost) || 15
-            }));
-        }
-
-        cookiesPerSecond = upgradesData.reduce((sum, u) => sum + (u.owned * u.cps), 0);
-        return true;
-    } catch (e) {
-        console.error("Laden fehlgeschlagen:", e);
-        return false;
-    }
-}
-
-function resetGame() {
-    if (!confirm("Spiel wirklich zurücksetzen?\nAlles wird gelöscht!")) return;
-
-    // Hier wird der Speicher tatsächlich gelöscht
-    localStorage.removeItem(SAVE_KEY);
-
-    // Seite komplett neu laden → Startzustand
-    window.location.reload();
-}
-
-// ────────────────────────────────────────────────
-// PREIS-FUNKTIONEN
+// PREIS BERECHNEN (unverändert)
 // ────────────────────────────────────────────────
 function getUpgradeCost(upgrade) {
     return Math.ceil(upgrade.baseCost * Math.pow(1.15, upgrade.owned));
@@ -151,7 +145,7 @@ function getAIGenerateCost() {
 }
 
 // ────────────────────────────────────────────────
-// RENDER & UPDATE
+// RENDER & UPDATE (unverändert + save)
 // ────────────────────────────────────────────────
 function renderUpgrades() {
     upgradesDiv.innerHTML = '';
@@ -180,7 +174,7 @@ function buyUpgrade(index) {
     updateDisplays();
     renderUpgrades();
     checkMilestoneAchievements();
-    saveGame();
+    saveGame(); // ← NEU: Speichern nach Kauf
 }
 
 function updateDisplays() {
@@ -193,16 +187,34 @@ function updateDisplays() {
 }
 
 // ────────────────────────────────────────────────
-// EVENTS
+// KLICK & AUTO (mit throttled save)
 // ────────────────────────────────────────────────
 bigCookie.onclick = () => {
     cookies += clickValue;
     updateDisplays();
     renderUpgrades();
     checkMilestoneAchievements();
+    // Speichern nur alle 10 Klicks (Performance)
     if (Math.random() < 0.1) saveGame();
 };
 
+setInterval(() => {
+    cookies += cookiesPerSecond;
+    updateDisplays();
+    renderUpgrades();
+    checkMilestoneAchievements();
+
+    // Speichern alle 5 Sekunden
+    const now = Date.now();
+    if (now - lastSaveTime > SAVE_INTERVAL) {
+        saveGame();
+        lastSaveTime = now;
+    }
+}, 1000);
+
+// ────────────────────────────────────────────────
+// AI BOT KAUFEN (mit save)
+// ────────────────────────────────────────────────
 aiGenerateBtn.onclick = () => {
     const cost = getAIGenerateCost();
     if (cookies < cost) return;
@@ -223,21 +235,61 @@ aiGenerateBtn.onclick = () => {
     renderUpgrades();
     updateDisplays();
     checkMilestoneAchievements();
-    saveGame();
+    saveGame(); // ← NEU: Speichern nach AI
 };
 
+// ────────────────────────────────────────────────
+// RESET BUTTON
+// ────────────────────────────────────────────────
 resetBtn.onclick = resetGame;
 
-setInterval(() => {
-    cookies += cookiesPerSecond;
-    updateDisplays();
-    renderUpgrades();
-    checkMilestoneAchievements();
-    saveGame();
-}, 5000);
+// ────────────────────────────────────────────────
+// ERFOLGE (unverändert)
+// ────────────────────────────────────────────────
+function addAchievement(text) {
+    if (achievements.includes(text)) return;
+    achievements.push(text);
+    const el = document.createElement('div');
+    el.className = 'achievement';
+    el.textContent = text;
+    achievementsDiv.appendChild(el);
+}
+
+function checkMilestoneAchievements() {
+    // Feste Meilensteine
+    const milestones = [
+        {c: cookies >= 100,          t: "Erste 100 Cookies – Welcome to Flavortown!"},
+        {c: cookies >= 1000,         t: "1a Cookies – du bist jetzt hungrig!"},
+        {c: cookies >= 1e6,          t: "1b Cookies – Million Flavor Master!"},
+        {c: cookies >= 1e9,          t: "1c Cookies – Milliardär der Aromen!"},
+        {c: cookies >= 1e12,         t: "1d Cookies – Restaurant-Käufer!"},
+        {c: cookiesPerSecond >= 100, t: "100 cps – Spice King!"},
+        {c: cookiesPerSecond >= 1e6, t: "1b cps – Flavor Overdrive!"},
+    ];
+
+    milestones.forEach(m => { if (m.c) addAchievement(m.t); });
+
+    // AI-Bot Meilensteine
+    const botMilestones = [5,10,20,50,100,250,500,1000,2500,5000,10000,25000,50000,100000];
+    for (let goal of botMilestones) {
+        if (aiBotIndex >= goal && lastMilestoneBots < goal) {
+            addAchievement(`${goal} AI Flavor Bots freigeschaltet – du bist eine Legende! 🔥🤖`);
+            lastMilestoneBots = goal;
+            break;
+        }
+    }
+
+    // Neue Suffix-Stufe
+    const currentTier = getTier(cookies);
+    if (currentTier > lastMilestoneSuffix) {
+        const newSuffix = suffixForTier(currentTier);
+        addAchievement(`Neue Größenordnung erreicht – ${newSuffix} Cookies! 🍪∞`);
+        lastMilestoneSuffix = currentTier;
+    }
+}
 
 // ────────────────────────────────────────────────
-// GOLDEN COOKIE
+// GOLDEN COOKIE (unverändert)
 // ────────────────────────────────────────────────
 function spawnGoldenCookie() {
     const x = Math.random() * (window.innerWidth - 220);
@@ -254,60 +306,21 @@ goldenCookie.onclick = () => {
     updateDisplays();
     goldenCookie.style.display = 'none';
     addAchievement(`Golden Cookie! +${abbreviate(bonus)} Cookies 🌟`);
-    saveGame();
+    saveGame(); // ← NEU: Nach Golden Cookie
 };
 
 setInterval(spawnGoldenCookie, 40000 + Math.random()*60000);
 
 // ────────────────────────────────────────────────
-// ERFOLGE
+// AUTO-SPEICHER BEIM SCHLIESSEN
 // ────────────────────────────────────────────────
-function addAchievement(text) {
-    if (achievements.includes(text)) return;
-    achievements.push(text);
-    const el = document.createElement('div');
-    el.className = 'achievement';
-    el.textContent = text;
-    achievementsDiv.appendChild(el);
-}
-
-function checkMilestoneAchievements() {
-    const milestones = [
-        {c: cookies >= 100,          t: "Erste 100 Cookies – Welcome to Flavortown!"},
-        {c: cookies >= 1000,         t: "1a Cookies – du bist jetzt hungrig!"},
-        {c: cookies >= 1e6,          t: "1b Cookies – Million Flavor Master!"},
-        {c: cookies >= 1e9,          t: "1c Cookies – Milliardär der Aromen!"},
-        {c: cookies >= 1e12,         t: "1d Cookies – Restaurant-Käufer!"},
-        {c: cookiesPerSecond >= 100, t: "100 cps – Spice King!"},
-        {c: cookiesPerSecond >= 1e6, t: "1b cps – Flavor Overdrive!"},
-    ];
-
-    milestones.forEach(m => { if (m.c) addAchievement(m.t); });
-
-    const botMilestones = [5,10,20,50,100,250,500,1000,2500,5000,10000];
-    for (let goal of botMilestones) {
-        if (aiBotIndex >= goal && lastMilestoneBots < goal) {
-            addAchievement(`${goal} AI Flavor Bots freigeschaltet – Legendenstatus! 🔥🤖`);
-            lastMilestoneBots = goal;
-            break;
-        }
-    }
-
-    const currentTier = getTier(cookies);
-    if (currentTier > lastMilestoneSuffix) {
-        const newSuffix = suffixForTier(currentTier);
-        addAchievement(`Neue Liga: ${newSuffix} Cookies! 🍪∞`);
-        lastMilestoneSuffix = currentTier;
-    }
-}
+window.onbeforeunload = saveGame;
 
 // ────────────────────────────────────────────────
-// START
+// START: LADEN & INITIALISIEREN
 // ────────────────────────────────────────────────
 loadGame();
 renderUpgrades();
 updateDisplays();
 checkMilestoneAchievements();
-
-// Sicherstellen, dass beim Verlassen gespeichert wird
-window.addEventListener('beforeunload', saveGame);
+saveGame(); // Erstes Save nach Laden
