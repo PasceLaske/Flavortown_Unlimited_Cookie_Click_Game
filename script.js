@@ -16,7 +16,6 @@ const aiGenerateBtn = document.getElementById('ai-generate');
 const resetBtn = document.getElementById('reset-game');
 const achievementsDiv = document.getElementById('achievements');
 const goldenCookie = document.getElementById('golden-cookie');
-const saveStatus = document.getElementById('save-status');
 
 // ────────────────────────────────────────────────
 // ZAHLEN-ABKÜRZUNG
@@ -83,41 +82,36 @@ const aiBotNames = [
 ];
 
 // ────────────────────────────────────────────────
-// SAVE / LOAD / RESET
+// SPEICHER-FUNKTIONEN
 // ────────────────────────────────────────────────
+const SAVE_KEY = 'flavortownClickerSave_v1';
+
 function saveGame() {
-    try {
-        const saveData = {
-            cookies,
-            upgradesData,
-            aiBotIndex,
-            achievements,
-            lastMilestoneBots,
-            lastMilestoneSuffix,
-            timestamp: Date.now()
-        };
-        localStorage.setItem('flavortownClickerSave', JSON.stringify(saveData));
-        showSaveStatus("Gespeichert ✓", "success");
-    } catch (e) {
-        console.error("Speichern fehlgeschlagen:", e);
-        showSaveStatus("Speichern fehlgeschlagen!", "error");
-    }
+    const saveData = {
+        cookies,
+        upgradesData,
+        aiBotIndex,
+        achievements,
+        lastMilestoneBots,
+        lastMilestoneSuffix,
+        timestamp: Date.now()
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
 }
 
 function loadGame() {
-    try {
-        const saved = localStorage.getItem('flavortownClickerSave');
-        if (!saved) return false;
+    const saved = localStorage.getItem(SAVE_KEY);
+    if (!saved) return false;
 
+    try {
         const data = JSON.parse(saved);
-        
+
         cookies = Number(data.cookies) || 0;
         aiBotIndex = Number(data.aiBotIndex) || 0;
         achievements = Array.isArray(data.achievements) ? data.achievements : [];
         lastMilestoneBots = Number(data.lastMilestoneBots) || 0;
         lastMilestoneSuffix = Number(data.lastMilestoneSuffix) || 0;
 
-        // Upgrades sicher laden
         if (Array.isArray(data.upgradesData)) {
             upgradesData = data.upgradesData.map(u => ({
                 ...u,
@@ -127,38 +121,26 @@ function loadGame() {
             }));
         }
 
-        // CPS neu berechnen
         cookiesPerSecond = upgradesData.reduce((sum, u) => sum + (u.owned * u.cps), 0);
-
-        showSaveStatus("Spiel geladen ✓");
         return true;
     } catch (e) {
         console.error("Laden fehlgeschlagen:", e);
-        showSaveStatus("Laden fehlgeschlagen – neues Spiel gestartet", "error");
         return false;
     }
 }
 
 function resetGame() {
-    if (!confirm("Möchtest du wirklich ALLES löschen?\nFortschritt, Upgrades, Erfolge – alles weg!")) {
-        return;
-    }
+    if (!confirm("Spiel wirklich zurücksetzen?\nAlles wird gelöscht!")) return;
 
-    localStorage.removeItem('flavortownClickerSave');
-    location.reload();
-}
+    // Hier wird der Speicher tatsächlich gelöscht
+    localStorage.removeItem(SAVE_KEY);
 
-function showSaveStatus(text, type = "success") {
-    if (!saveStatus) return;
-    saveStatus.textContent = text;
-    saveStatus.className = type === "error" ? "error" : "";
-    setTimeout(() => {
-        saveStatus.textContent = "";
-    }, 4000);
+    // Seite komplett neu laden → Startzustand
+    window.location.reload();
 }
 
 // ────────────────────────────────────────────────
-// PREIS BERECHNEN
+// PREIS-FUNKTIONEN
 // ────────────────────────────────────────────────
 function getUpgradeCost(upgrade) {
     return Math.ceil(upgrade.baseCost * Math.pow(1.15, upgrade.owned));
@@ -169,7 +151,7 @@ function getAIGenerateCost() {
 }
 
 // ────────────────────────────────────────────────
-// RENDER-FUNKTIONEN
+// RENDER & UPDATE
 // ────────────────────────────────────────────────
 function renderUpgrades() {
     upgradesDiv.innerHTML = '';
@@ -192,11 +174,9 @@ function buyUpgrade(index) {
     const upgrade = upgradesData[index];
     const cost = getUpgradeCost(upgrade);
     if (cookies < cost) return;
-
     cookies -= cost;
     upgrade.owned++;
     cookiesPerSecond += upgrade.cps;
-
     updateDisplays();
     renderUpgrades();
     checkMilestoneAchievements();
@@ -220,8 +200,7 @@ bigCookie.onclick = () => {
     updateDisplays();
     renderUpgrades();
     checkMilestoneAchievements();
-    // Sparsames Speichern bei Klicks
-    if (Math.random() < 0.08) saveGame();
+    if (Math.random() < 0.1) saveGame();
 };
 
 aiGenerateBtn.onclick = () => {
@@ -254,12 +233,12 @@ setInterval(() => {
     updateDisplays();
     renderUpgrades();
     checkMilestoneAchievements();
-
-    // Regelmäßiges Speichern
     saveGame();
-}, 6000);
+}, 5000);
 
-// Golden Cookie
+// ────────────────────────────────────────────────
+// GOLDEN COOKIE
+// ────────────────────────────────────────────────
 function spawnGoldenCookie() {
     const x = Math.random() * (window.innerWidth - 220);
     const y = Math.random() * (window.innerHeight - 220);
@@ -278,7 +257,7 @@ goldenCookie.onclick = () => {
     saveGame();
 };
 
-setInterval(spawnGoldenCookie, 40000 + Math.random() * 60000);
+setInterval(spawnGoldenCookie, 40000 + Math.random()*60000);
 
 // ────────────────────────────────────────────────
 // ERFOLGE
@@ -325,10 +304,7 @@ function checkMilestoneAchievements() {
 // ────────────────────────────────────────────────
 // START
 // ────────────────────────────────────────────────
-if (!loadGame()) {
-    showSaveStatus("Neues Spiel gestartet – kein Speicher gefunden");
-}
-
+loadGame();
 renderUpgrades();
 updateDisplays();
 checkMilestoneAchievements();
