@@ -32,17 +32,3 @@ Build insane projects, click cookies like Guy Fieri, unlock AI-powered flavor bo
 - Click upgrades/bots to purchase them
 - Wait and watch numbers go brrrrr
 
-## Technologies
-
-- Pure **HTML5 + CSS3 + Vanilla JavaScript**
-- No frameworks, no build tools — just open `index.html` in your browser
-- Responsive design
-- Math for very large numbers (exponential growth & abbreviation)
-
-## How to Run Locally
-
-1. Clone the repository
-
-```bash
-git clone https://github.com/YOUR_USERNAME/flavortown-cookie-clicker.git
-cd flavortown-cookie-clicker
