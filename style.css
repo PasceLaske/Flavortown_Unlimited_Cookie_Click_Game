@@ -156,3 +156,14 @@ h1 {
     background: #d32f2f;
     transform: scale(1.03);
 }
+
+#save-status {
+    background: rgba(0,255,0,0.3) !important;
+    color: #000;
+    font-weight: bold;
+}
+
+#save-status.error {
+    background: rgba(255,0,0,0.3) !important;
+    color: #fff;
+}
