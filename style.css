@@ -1,0 +1,141 @@
+body {
+    background: linear-gradient(135deg, #FF4500, #FF8C00, #FFD700);
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    color: white;
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+    user-select: none;
+    animation: bg-pulse 12s infinite alternate;
+}
+
+@keyframes bg-pulse {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+}
+
+h1 { 
+    margin: 10px; 
+    text-shadow: 2px 2px 12px rgba(0,0,0,0.6); 
+    font-size: 2.8em;
+    animation: title-glow 3s infinite alternate;
+}
+
+@keyframes title-glow {
+    0% { text-shadow: 0 0 10px #FFD700; }
+    100% { text-shadow: 0 0 30px #FF4500, 0 0 50px #FF8C00; }
+}
+
+#cookie-counter {
+    font-size: 80px;
+    font-weight: bold;
+    margin: 20px 0;
+    text-shadow: 0 0 20px #000;
+}
+
+#cps-counter {
+    font-size: 42px;
+    opacity: 0.92;
+    margin-bottom: 25px;
+}
+
+#bigCookie {
+    font-size: 220px;
+    cursor: pointer;
+    transition: transform 0.08s;
+    display: inline-block;
+    user-select: none;
+}
+
+#bigCookie:active {
+    transform: scale(0.90);
+}
+
+#upgrades {
+    margin: 40px auto;
+    max-width: 1300px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.upgrade {
+    background: rgba(255,215,0,0.92);
+    color: #000;
+    width: 210px;
+    padding: 16px;
+    margin: 14px;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.25s;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.45);
+}
+
+.upgrade:hover {
+    transform: translateY(-8px) rotate(3deg);
+    background: #FFD700;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.55);
+}
+
+.upgrade.locked {
+    opacity: 0.48;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.upgrade .name { font-weight: bold; font-size: 1.25em; }
+.upgrade .cost { color: #8B0000; font-weight: bold; }
+.upgrade .owned { font-size: 0.95em; color: #006400; }
+.upgrade .cps { font-style: italic; color: #333; }
+
+#ai-generate {
+    background: linear-gradient(90deg, #4CAF50, #66BB6A);
+    color: white;
+    padding: 14px 32px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.35em;
+    font-weight: bold;
+    cursor: pointer;
+    margin: 30px auto;
+    display: block;
+    transition: all 0.3s;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+}
+
+#ai-generate:hover {
+    transform: scale(1.06);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+#ai-generate.locked {
+    background: #777;
+    cursor: not-allowed;
+    transform: none;
+}
+
+#achievements {
+    margin: 30px auto;
+    max-width: 900px;
+    text-align: left;
+    background: rgba(0,0,0,0.35);
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.achievement {
+    background: rgba(255,255,255,0.15);
+    padding: 10px 14px;
+    margin: 10px 0;
+    border-radius: 10px;
+    border-left: 5px solid #FFD700;
+}
+
+#golden-cookie {
+    position: absolute;
+    font-size: 110px;
+    cursor: pointer;
+    display: none;
+    z-index: 10;
+    text-shadow: 0 0 15px #FFD700;
+}
