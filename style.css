@@ -88,32 +88,23 @@ h1 {
 .upgrade .owned { font-size: 0.95em; color: #006400; }
 .upgrade .cps { font-style: italic; color: #333; }
 
-.button-row {
-    margin: 30px 0;
-    display: flex;
-    justify-content: center;
-    gap: 24px;
-    flex-wrap: wrap;
-}
-
-button {
+#ai-generate {
+    background: linear-gradient(90deg, #4CAF50, #66BB6A);
+    color: white;
     padding: 14px 32px;
-    font-size: 1.3em;
-    font-weight: bold;
     border: none;
     border-radius: 12px;
+    font-size: 1.35em;
+    font-weight: bold;
     cursor: pointer;
+    margin: 30px auto;
+    display: block;
     transition: all 0.3s;
     box-shadow: 0 6px 15px rgba(0,0,0,0.4);
 }
 
-#ai-generate {
-    background: linear-gradient(90deg, #4CAF50, #66BB6A);
-    color: white;
-}
-
-#ai-generate:hover:not(.locked) {
-    transform: scale(1.05);
+#ai-generate:hover {
+    transform: scale(1.06);
     box-shadow: 0 10px 25px rgba(0,0,0,0.5);
 }
 
@@ -121,16 +112,6 @@ button {
     background: #777;
     cursor: not-allowed;
     transform: none;
-}
-
-#reset-game {
-    background: #c62828;
-    color: white;
-}
-
-#reset-game:hover {
-    background: #b71c1c;
-    transform: scale(1.05);
 }
 
 #achievements {
