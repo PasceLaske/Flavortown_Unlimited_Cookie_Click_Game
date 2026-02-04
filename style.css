@@ -139,3 +139,20 @@ h1 {
     z-index: 10;
     text-shadow: 0 0 15px #FFD700;
 }
+#reset-game {
+    background: #f44336;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1em;
+    margin: 15px auto;
+    cursor: pointer;
+    display: block;
+    transition: all 0.2s;
+}
+
+#reset-game:hover {
+    background: #d32f2f;
+    transform: scale(1.03);
+}
