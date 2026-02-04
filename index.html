@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hack Club Flavortown Cookie Clicker</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #FF4500, #FF8C00, #FFD700);
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            user-select: none;
+            animation: bg-pulse 12s infinite alternate;
+        }
+        @keyframes bg-pulse {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+        h1 { 
+            margin: 10px; 
+            text-shadow: 2px 2px 12px rgba(0,0,0,0.6); 
+            font-size: 2.8em;
+            animation: title-glow 3s infinite alternate;
+        }
+        @keyframes title-glow {
+            0% { text-shadow: 0 0 10px #FFD700; }
+            100% { text-shadow: 0 0 30px #FF4500, 0 0 50px #FF8C00; }
+        }
+        #cookie-counter {
+            font-size: 80px;
+            font-weight: bold;
+            margin: 20px 0;
+            text-shadow: 0 0 20px #000;
+        }
+        #cps-counter {
+            font-size: 42px;
+            opacity: 0.92;
+            margin-bottom: 25px;
+        }
+        #bigCookie {
+            font-size: 220px;
+            cursor: pointer;
+            transition: transform 0.08s;
+            display: inline-block;
+            user-select: none;
+        }
+        #bigCookie:active {
+            transform: scale(0.90);
+        }
+        #upgrades {
+            margin: 40px auto;
+            max-width: 1300px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .upgrade {
+            background: rgba(255,215,0,0.92);
+            color: #000;
+            width: 210px;
+            padding: 16px;
+            margin: 14px;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.45);
+        }
+        .upgrade:hover {
+            transform: translateY(-8px) rotate(3deg);
+            background: #FFD700;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.55);
+        }
+        .upgrade.locked {
+            opacity: 0.48;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .upgrade .name { font-weight: bold; font-size: 1.25em; }
+        .upgrade .cost { color: #8B0000; font-weight: bold; }
+        .upgrade .owned { font-size: 0.95em; color: #006400; }
+        .upgrade .cps { font-style: italic; color: #333; }
+        #ai-generate {
+            background: linear-gradient(90deg, #4CAF50, #66BB6A);
+            color: white;
+            padding: 14px 32px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.35em;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 30px auto;
+            display: block;
+            transition: all 0.3s;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+        }
+        #ai-generate:hover {
+            transform: scale(1.06);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        #ai-generate.locked {
+            background: #777;
+            cursor: not-allowed;
+            transform: none;
+        }
+        #achievements {
+            margin: 30px auto;
+            max-width: 900px;
+            text-align: left;
+            background: rgba(0,0,0,0.35);
+            padding: 20px;
+            border-radius: 12px;
+        }
+        .achievement {
+            background: rgba(255,255,255,0.15);
+            padding: 10px 14px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border-left: 5px solid #FFD700;
+        }
+        #golden-cookie {
+            position: absolute;
+            font-size: 110px;
+            cursor: pointer;
+            display: none;
+            z-index: 10;
+            text-shadow: 0 0 15px #FFD700;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Hack Club Flavortown Cookie Clicker</h1>
+    <p> 🍪🔥</p>
+
+    <div id="cookie-counter">0 cookies</div>
+    <div id="cps-counter">0 cookies pro Sekunde</div>
+
+    <div id="bigCookie">🍪</div>
+    <div id="golden-cookie">🌟🍪</div>
+
+    <div id="upgrades"></div>
+
+    <button id="ai-generate">AI: Neuen Flavor Bot generieren!</button>
+
+    <div id="achievements">
+        <h2>Erfolge</h2>
+    </div>
+
+    <script>
+        // ────────────────────────────────────────────────
+        // VARIABLEN
+        // ────────────────────────────────────────────────
+        let cookies = 0;
+        let cookiesPerSecond = 0;
+        let clickValue = 1;
+        let achievements = [];
+        let lastMilestoneBots = 0;
+        let lastMilestoneSuffix = 0;
+
+        const cookieDisplay = document.getElementById('cookie-counter');
+        const cpsDisplay = document.getElementById('cps-counter');
+        const bigCookie = document.getElementById('bigCookie');
+        const upgradesDiv = document.getElementById('upgrades');
+        const aiGenerateBtn = document.getElementById('ai-generate');
+        const achievementsDiv = document.getElementById('achievements');
+        const goldenCookie = document.getElementById('golden-cookie');
+
+        // ────────────────────────────────────────────────
+        // ZAHLEN-ABKÜRZUNG
+        // ────────────────────────────────────────────────
+        function suffixForTier(tier) {
+            let s = '';
+            tier = Math.floor(tier);
+            if (tier === 0) return '';
+            while (tier > 0) {
+                tier -= 1;
+                s = String.fromCharCode(97 + (tier % 26)) + s;
+                tier = Math.floor(tier / 26);
+            }
+            return s;
+        }
+
+        function abbreviate(num) {
+            num = Math.floor(num);
+            if (num < 1000) return num.toLocaleString();
+            const log = Math.log10(num);
+            const tier = Math.floor(log / 3);
+            const mant = num / Math.pow(10, tier * 3);
+            const suf = suffixForTier(tier);
+            let mantStr = mant.toFixed(2).replace(/\.?0+$/, '');
+            return mantStr + suf;
+        }
+
+        function getTier(num) {
+            if (num < 1000) return 0;
+            return Math.floor(Math.log10(num) / 3);
+        }
+
+        function formatCps(num) {
+            if (num === 0) return '0';
+            if (num < 1000) return num.toLocaleString(undefined, {maximumFractionDigits: 1});
+            return abbreviate(num);
+        }
+
+        // ────────────────────────────────────────────────
+        // UPGRADES
+        // ────────────────────────────────────────────────
+        let upgradesData = [
+            { name: "Flavortown Cursor", baseCost: 15, cps: 0.1, owned: 0 },
+            { name: "Finger Lickin' Hacker", baseCost: 100, cps: 1, owned: 0 },
+            { name: "Dino's BBQ Bot", baseCost: 1100, cps: 8, owned: 0 },
+            { name: "Flavor Farm Frenzy", baseCost: 12000, cps: 47, owned: 0 },
+            { name: "Spice Rack Miner", baseCost: 130000, cps: 260, owned: 0 },
+            { name: "Triple D Factory", baseCost: 1400000, cps: 1400, owned: 0 },
+            { name: "Guy's AI Grill Swarm", baseCost: 20000000, cps: 7800, owned: 0 },
+            { name: "Quantum Flavor Blaster", baseCost: 330000000, cps: 44000, owned: 0 },
+            { name: "Space Station Sizzle", baseCost: 5100000000, cps: 260000, owned: 0 },
+            { name: "Time Warp Tasty Portal", baseCost: 75000000000, cps: 1400000, owned: 0 }
+        ];
+
+        const aiBotNames = [
+            "Flavor Fusion Bot", "Spicy Hackatron", "Burger Byte Blaster", "Pizza Pixel Pulverizer",
+            "Taco Time Traveler", "Donut Dimension Devourer", "Fries Frequency Fryer", "Shakebot Supreme",
+            "Wing Wizard", "Nachos Nebula Nommer", "Ramen Reactor", "Sushi Swarm Hacker",
+            "Kebab Quantum Kicker", "Pancake Portal Punisher", "Waffle Warp Worker", "Churro Chrono Crusher",
+            "Falafel Flux Factory", "Boba Black Hole", "Schnitzel Singularity", "Curry Cosmic Cruncher"
+        ];
+        let aiBotIndex = 0;
+
+        // ────────────────────────────────────────────────
+        // PREIS BERECHNEN
+        // ────────────────────────────────────────────────
+        function getUpgradeCost(upgrade) {
+            return Math.ceil(upgrade.baseCost * Math.pow(1.15, upgrade.owned));
+        }
+
+        function getAIGenerateCost() {
+            return Math.ceil(1000000 * Math.pow(1.85, aiBotIndex));
+        }
+
+        // ────────────────────────────────────────────────
+        // RENDER & UPDATE
+        // ────────────────────────────────────────────────
+        function renderUpgrades() {
+            upgradesDiv.innerHTML = '';
+            upgradesData.forEach((upgrade, i) => {
+                const cost = getUpgradeCost(upgrade);
+                const el = document.createElement('div');
+                el.className = 'upgrade' + (cookies < cost ? ' locked' : '');
+                el.innerHTML = `
+                    <div class="name">${upgrade.name}</div>
+                    <div class="cost">Kosten: ${abbreviate(cost)} 🍪</div>
+                    <div class="cps">+${formatCps(upgrade.cps)} cps</div>
+                    <div class="owned">Besessen: ${upgrade.owned}</div>
+                `;
+                el.onclick = () => buyUpgrade(i);
+                upgradesDiv.appendChild(el);
+            });
+        }
+
+        function buyUpgrade(index) {
+            const upgrade = upgradesData[index];
+            const cost = getUpgradeCost(upgrade);
+            if (cookies < cost) return;
+            cookies -= cost;
+            upgrade.owned++;
+            cookiesPerSecond += upgrade.cps;
+            updateDisplays();
+            renderUpgrades();
+            checkMilestoneAchievements();
+        }
+
+        function updateDisplays() {
+            cookieDisplay.textContent = abbreviate(cookies) + " cookies";
+            cpsDisplay.textContent = formatCps(cookiesPerSecond) + " cookies pro Sekunde";
+
+            const aiCost = getAIGenerateCost();
+            aiGenerateBtn.textContent = `AI: Neuen Flavor Bot generieren! (${abbreviate(aiCost)} 🍪)`;
+            aiGenerateBtn.className = cookies >= aiCost ? '' : 'locked';
+        }
+
+        // ────────────────────────────────────────────────
+        // Klick & Auto
+        // ────────────────────────────────────────────────
+        bigCookie.onclick = () => {
+            cookies += clickValue;
+            updateDisplays();
+            renderUpgrades();
+            checkMilestoneAchievements();
+        };
+
+        setInterval(() => {
+            cookies += cookiesPerSecond;
+            updateDisplays();
+            renderUpgrades();
+            checkMilestoneAchievements();
+        }, 1000);
+
+        // ────────────────────────────────────────────────
+        // AI BOT KAUFEN
+        // ────────────────────────────────────────────────
+        aiGenerateBtn.onclick = () => {
+            const cost = getAIGenerateCost();
+            if (cookies < cost) return;
+
+            cookies -= cost;
+
+            const power = Math.pow(2.3, aiBotIndex);
+            const newBot = {
+                name: aiBotNames[aiBotIndex % aiBotNames.length] + " Mk" + (Math.floor(aiBotIndex / aiBotNames.length) + 1),
+                baseCost: 80000000 * power,
+                cps: 400000 * power,
+                owned: 0
+            };
+
+            upgradesData.push(newBot);
+            aiBotIndex++;
+
+            renderUpgrades();
+            updateDisplays();
+            checkMilestoneAchievements();
+        };
+
+        // ────────────────────────────────────────────────
+        // ERFOLGE – nur bei großen Meilensteinen
+        // ────────────────────────────────────────────────
+        function addAchievement(text) {
+            if (achievements.includes(text)) return;
+            achievements.push(text);
+            const el = document.createElement('div');
+            el.className = 'achievement';
+            el.textContent = text;
+            achievementsDiv.appendChild(el);
+        }
+
+        function checkMilestoneAchievements() {
+            // Feste Meilensteine
+            const milestones = [
+                {c: cookies >= 100,          t: "Erste 100 Cookies – Welcome to Flavortown!"},
+                {c: cookies >= 1000,         t: "1a Cookies – du bist jetzt hungrig!"},
+                {c: cookies >= 1e6,          t: "1b Cookies – Million Flavor Master!"},
+                {c: cookies >= 1e9,          t: "1c Cookies – Milliardär der Aromen!"},
+                {c: cookies >= 1e12,         t: "1d Cookies – Restaurant-Käufer!"},
+                {c: cookiesPerSecond >= 100, t: "100 cps – Spice King!"},
+                {c: cookiesPerSecond >= 1e6, t: "1b cps – Flavor Overdrive!"},
+            ];
+
+            milestones.forEach(m => { if (m.c) addAchievement(m.t); });
+
+            // AI-Bot Meilensteine: 5,10,20,50,100,250,500,1000,...
+            const botMilestones = [5,10,20,50,100,250,500,1000,2500,5000,10000,25000,50000,100000];
+            for (let goal of botMilestones) {
+                if (aiBotIndex >= goal && lastMilestoneBots < goal) {
+                    addAchievement(`${goal} AI Flavor Bots freigeschaltet – du bist eine Legende! 🔥🤖`);
+                    lastMilestoneBots = goal;
+                    break;
+                }
+            }
+
+            // Neue Suffix-Stufe erreicht (aa, ab, bb, cc, ...)
+            const currentTier = getTier(cookies);
+            if (currentTier > lastMilestoneSuffix) {
+                const newSuffix = suffixForTier(currentTier);
+                addAchievement(`Neue Größenordnung erreicht – ${newSuffix} Cookies! 🍪∞`);
+                lastMilestoneSuffix = currentTier;
+            }
+        }
+
+        // ────────────────────────────────────────────────
+        // GOLDEN COOKIE
+        // ────────────────────────────────────────────────
+        function spawnGoldenCookie() {
+            const x = Math.random() * (window.innerWidth - 220);
+            const y = Math.random() * (window.innerHeight - 220);
+            goldenCookie.style.left = x + 'px';
+            goldenCookie.style.top = y + 'px';
+            goldenCookie.style.display = 'block';
+            setTimeout(() => goldenCookie.style.display = 'none', 10000);
+        }
+
+        goldenCookie.onclick = () => {
+            const bonus = Math.floor(Math.random() * 50000) + 5000;
+            cookies += bonus;
+            updateDisplays();
+            goldenCookie.style.display = 'none';
+            addAchievement(`Golden Cookie! +${abbreviate(bonus)} Cookies 🌟`);
+        };
+
+        setInterval(spawnGoldenCookie, 40000 + Math.random()*60000);
+
+        // ────────────────────────────────────────────────
+        // START
+        // ────────────────────────────────────────────────
+        renderUpgrades();
+        updateDisplays();
+        checkMilestoneAchievements();
+    </script>
+
+</body>
+</html>
