@@ -88,19 +88,28 @@ h1 {
 .upgrade .owned { font-size: 0.95em; color: #006400; }
 .upgrade .cps { font-style: italic; color: #333; }
 
+.button-row {
+    margin: 30px 0;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+button {
+    padding: 14px 32px;
+    font-size: 1.35em;
+    font-weight: bold;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+}
+
 #ai-generate {
     background: linear-gradient(90deg, #4CAF50, #66BB6A);
     color: white;
-    padding: 14px 32px;
-    border: none;
-    border-radius: 12px;
-    font-size: 1.35em;
-    font-weight: bold;
-    cursor: pointer;
-    margin: 30px auto;
-    display: block;
-    transition: all 0.3s;
-    box-shadow: 0 6px 15px rgba(0,0,0,0.4);
 }
 
 #ai-generate:hover {
@@ -112,6 +121,16 @@ h1 {
     background: #777;
     cursor: not-allowed;
     transform: none;
+}
+
+#reset-game {
+    background: #d32f2f;
+    color: white;
+}
+
+#reset-game:hover {
+    background: #b71c1c;
+    transform: scale(1.04);
 }
 
 #achievements {
@@ -139,31 +158,13 @@ h1 {
     z-index: 10;
     text-shadow: 0 0 15px #FFD700;
 }
-#reset-game {
-    background: #f44336;
-    color: white;
-    padding: 12px 24px;
-    border: none;
-    border-radius: 8px;
-    font-size: 1.1em;
-    margin: 15px auto;
-    cursor: pointer;
-    display: block;
-    transition: all 0.2s;
-}
-
-#reset-game:hover {
-    background: #d32f2f;
-    transform: scale(1.03);
-}
 
 #save-status {
-    background: rgba(0,255,0,0.3) !important;
-    color: #000;
-    font-weight: bold;
-}
-
-#save-status.error {
-    background: rgba(255,0,0,0.3) !important;
+    font-size: 1.1em;
+    margin: 15px auto;
+    padding: 10px 20px;
+    max-width: 600px;
+    border-radius: 8px;
+    background: rgba(255, 255, 0, 0.25);
     color: #fff;
 }
