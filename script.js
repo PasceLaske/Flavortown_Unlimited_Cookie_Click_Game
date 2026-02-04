@@ -250,7 +250,7 @@ setInterval(() => {
     renderUpgrades();
     checkMilestoneAchievements();
     saveGame();
-}, 5000);
+}, 1000);
 
 // ────────────────────────────────────────────────
 // GOLDEN COOKIE
